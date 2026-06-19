@@ -6,17 +6,16 @@ services:
     dockerfilePath: ./Dockerfile
     envVars:
       - key: APP_NAME
-        value: https://microlearn-ai-3hy3.onrender.com
+        value: MicroLearn AI
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: "false"
+      # Laravel requires a 32-byte base64 key; set the real value in the dashboard
       - key: APP_KEY
-        generateValue: true
+        sync: false
       - key: APP_URL
-        value: https://microlearn-ai-3hy3.onrender.com
-      - key: ASSET_URL
-        value: https://microlearn-ai-3hy3.onrender.com
+        value: https://microlearn-ai-gnnx.onrender.com
 
       - key: DB_CONNECTION
         value: pgsql

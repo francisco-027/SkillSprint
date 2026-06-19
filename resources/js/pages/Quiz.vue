@@ -29,22 +29,47 @@
       <!-- Question Card -->
       <div class="content-card">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+          <span class="card-tag" style="margin:0">{{ typeLabel(currentQuestion?.type) }}</span>
           <span class="card-tag" style="margin:0">{{ currentQuestion?.difficulty }}</span>
           <span style="font-size:12px;color:var(--text-muted)">{{ currentQuestion?.xp_reward }} XP</span>
         </div>
         <h3 style="font-size:20px;margin-bottom:20px">{{ currentQuestion?.body }}</h3>
 
-        <div v-for="(option, i) in (currentQuestion?.options || [])" :key="i"
-             class="quiz-option"
-             :class="{
-               selected: selectedOption === option && !submitted,
-               correct: submitted && option === currentQuestion?.correct_answer,
-               wrong: submitted && selectedOption === option && option !== currentQuestion?.correct_answer
-             }"
-             @click="selectOption(option)">
-          <div class="quiz-option-radio"></div>
-          <div class="quiz-option-label">{{ option }}</div>
-        </div>
+        <!-- Multiple choice / True-False -->
+        <template v-if="currentQuestion?.type === 'multiple_choice' || currentQuestion?.type === 'true_false'">
+          <div v-for="(option, i) in (currentQuestion?.options || [])" :key="i"
+               class="quiz-option" :class="{ selected: currentAnswer === option }"
+               @click="currentAnswer = option">
+            <div class="quiz-option-radio"></div>
+            <div class="quiz-option-label">{{ option }}</div>
+          </div>
+        </template>
+
+        <!-- Identification -->
+        <template v-else-if="currentQuestion?.type === 'identification'">
+          <input v-model="currentAnswer" type="text" class="form-control"
+                 style="background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:10px"
+                 placeholder="Type your answer">
+        </template>
+
+        <!-- Enumeration -->
+        <template v-else-if="currentQuestion?.type === 'enumeration'">
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px">List {{ currentQuestion.expected_count }} answer{{ currentQuestion.expected_count === 1 ? '' : 's' }} (order doesn't matter):</div>
+          <input v-for="n in currentQuestion.expected_count" :key="n"
+                 v-model="currentAnswer[n - 1]" type="text" class="form-control"
+                 style="background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:10px;margin-bottom:8px"
+                 :placeholder="'Answer ' + n">
+        </template>
+
+        <!-- Multiple choice fallback (legacy quizzes with no type) -->
+        <template v-else>
+          <div v-for="(option, i) in (currentQuestion?.options || [])" :key="i"
+               class="quiz-option" :class="{ selected: currentAnswer === option }"
+               @click="currentAnswer = option">
+            <div class="quiz-option-radio"></div>
+            <div class="quiz-option-label">{{ option }}</div>
+          </div>
+        </template>
       </div>
 
       <!-- Navigation -->
@@ -52,10 +77,10 @@
         <button class="btn-ghost" @click="prevQuestion" :disabled="currentIndex === 0">Previous</button>
         <div style="display:flex;gap:8px">
           <button class="btn-ghost" @click="skipQuestion">Skip</button>
-          <button v-if="currentIndex < questions.length - 1" class="btn-grad" @click="nextQuestion" :disabled="!selectedOption">
+          <button v-if="currentIndex < questions.length - 1" class="btn-grad" @click="nextQuestion" :disabled="!hasAnswer">
             Next
           </button>
-          <button v-else class="btn-grad" style="background:var(--green)" @click="submitQuiz" :disabled="!selectedOption">
+          <button v-else class="btn-grad" style="background:var(--green)" @click="submitQuiz" :disabled="!hasAnswer">
             Submit Quiz
           </button>
         </div>
@@ -65,7 +90,7 @@
 </template>
 
 <script>
-import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
+import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue';
 
 export default {
   name: 'QuizPage',
@@ -75,8 +100,7 @@ export default {
     const loading = ref(true);
     const error = ref(null);
     const currentIndex = ref(0);
-    const selectedOption = ref(null);
-    const submitted = ref(false);
+    const currentAnswer = ref('');    // string, or array for enumeration
     const timer = ref(30);
     const score = reactive({ correct: 0, wrong: 0, skipped: 0 });
     const answers = ref([]);
@@ -85,6 +109,39 @@ export default {
 
     const currentQuestion = computed(() => questions.value[currentIndex.value]);
 
+    const hasAnswer = computed(() => {
+      const q = currentQuestion.value;
+      if (!q) return false;
+      if (q.type === 'enumeration') {
+        return Array.isArray(currentAnswer.value) && currentAnswer.value.some((s) => s && String(s).trim());
+      }
+      return !!(currentAnswer.value && String(currentAnswer.value).trim());
+    });
+
+    watch(currentIndex, () => initAnswer());
+
+    function initAnswer() {
+      const q = currentQuestion.value;
+      if (q && q.type === 'enumeration') {
+        currentAnswer.value = Array(Math.max(q.expected_count || 1, 1)).fill('');
+      } else {
+        currentAnswer.value = '';
+      }
+    }
+
+    function typeLabel(type) {
+      return {
+        multiple_choice: 'Multiple Choice',
+        true_false: 'True / False',
+        identification: 'Identification',
+        enumeration: 'Enumeration',
+      }[type] || 'Question';
+    }
+
+    function snapshotAnswer() {
+      return Array.isArray(currentAnswer.value) ? [...currentAnswer.value] : currentAnswer.value;
+    }
+
     onMounted(async () => {
       try {
         const pathParts = window.location.pathname.split('/');
@@ -92,6 +149,7 @@ export default {
         const { data } = await axios.get(`/api/quizzes/${quizId}`);
         quiz.value = data.quiz;
         questions.value = data.questions;
+        initAnswer();
         startTimer();
       } catch (e) {
         error.value = 'Could not load content. Please try again.';
@@ -111,34 +169,21 @@ export default {
       }, 1000);
     }
 
-    function selectOption(option) {
-      if (submitted.value) return;
-      selectedOption.value = option;
-    }
-
     function nextQuestion() {
-      if (selectedOption.value) {
-        answers.value.push({
-          question_id: currentQuestion.value.id,
-          selected: selectedOption.value,
-        });
-        selectedOption.value = null;
+      if (hasAnswer.value) {
+        answers.value.push({ question_id: currentQuestion.value.id, selected: snapshotAnswer() });
       }
       currentIndex.value++;
       startTimer();
     }
 
     function prevQuestion() {
-      if (currentIndex.value > 0) {
-        currentIndex.value--;
-        selectedOption.value = null;
-      }
+      if (currentIndex.value > 0) currentIndex.value--;
     }
 
     function skipQuestion() {
       answers.value.push({ question_id: currentQuestion.value.id, selected: null });
       score.skipped++;
-      selectedOption.value = null;
       if (currentIndex.value < questions.value.length - 1) {
         currentIndex.value++;
         startTimer();
@@ -146,11 +191,8 @@ export default {
     }
 
     async function submitQuiz() {
-      if (selectedOption.value) {
-        answers.value.push({
-          question_id: currentQuestion.value.id,
-          selected: selectedOption.value,
-        });
+      if (hasAnswer.value) {
+        answers.value.push({ question_id: currentQuestion.value.id, selected: snapshotAnswer() });
       }
       loading.value = true;
       try {
@@ -165,9 +207,9 @@ export default {
     }
 
     return {
-      quiz, questions, loading, error, currentIndex, selectedOption,
-      submitted, timer, score, answers, currentQuestion,
-      selectOption, nextQuestion, prevQuestion, skipQuestion, submitQuiz,
+      quiz, questions, loading, error, currentIndex, currentAnswer, hasAnswer,
+      timer, score, answers, currentQuestion,
+      typeLabel, nextQuestion, prevQuestion, skipQuestion, submitQuiz,
     };
   },
 };

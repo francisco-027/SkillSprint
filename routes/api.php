@@ -51,6 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/flashcards/{deckId}',                  [FlashcardController::class, 'show']);
     Route::patch('/flashcards/{deckId}/cards/{cardId}', [FlashcardController::class, 'updateCard']);
 
+    Route::post('/summaries/{summary}/quizzes', [QuizController::class, 'generate']);
     Route::get('/quizzes/{quizId}',          [QuizController::class, 'show']);
     Route::post('/quizzes/{quizId}/submit',  [QuizController::class, 'submit']);
     Route::get('/quizzes/{quizId}/results',  [QuizController::class, 'results']);

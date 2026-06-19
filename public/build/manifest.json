@@ -27,12 +27,12 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-D4F5badv.js",
+    "file": "assets/app-DfzIjfuy.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "css": [
-      "assets/app-C4s6g8On.css"
+      "assets/app-CMUwmEkt.css"
     ]
   },
   "resources/sass/app.scss": {

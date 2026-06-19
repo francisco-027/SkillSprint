@@ -3,8 +3,6 @@
 namespace App\Jobs;
 
 use App\Models\Flashcard;
-use App\Models\Quiz;
-use App\Models\QuizQuestion;
 use App\Models\Summary;
 use App\Models\Upload;
 use App\Services\GeminiService;
@@ -50,7 +48,7 @@ class ProcessUploadJob implements ShouldQueue
             'timeline_steps'     => $summaryData['timeline_steps'] ?? [],
         ]);
 
-        $flashcardsData = $gemini->generateFlashcards($content, 12);
+        $flashcardsData = $gemini->generateFlashcards($content, $this->flashcardCountFor($content));
 
         foreach ($flashcardsData as $index => $card) {
             Flashcard::create([
@@ -62,35 +60,24 @@ class ProcessUploadJob implements ShouldQueue
             ]);
         }
 
-        $quizData = $gemini->generateQuiz($content, 10, 'Medium');
-
-        $quiz = Quiz::create([
-            'user_id'        => $this->upload->user_id,
-            'summary_id'     => $summary->id,
-            'title'          => $summary->title . ' — Quiz',
-            'mode'           => 'practice',
-            'question_count' => count($quizData),
-            'difficulty'     => 'Medium',
-        ]);
-
-        foreach ($quizData as $index => $q) {
-            QuizQuestion::create([
-                'quiz_id'        => $quiz->id,
-                'body'           => $q['body'] ?? 'Question unavailable',
-                'options'        => $q['options'] ?? [],
-                'correct_option' => $q['correct_option'] ?? '',
-                'explanation'    => $q['explanation'] ?? '',
-                'difficulty'     => $q['difficulty'] ?? 'Medium',
-                'type'           => $q['type'] ?? 'Conceptual',
-                'xp_reward'      => $q['xp_reward'] ?? 15,
-                'sort_order'     => $index + 1,
-            ]);
-        }
-
         $this->upload->update([
             'status'       => 'done',
             'processed_at' => now(),
         ]);
+    }
+
+    /**
+     * Scale the number of flashcards to the amount of source material.
+     * Roughly one card per ~110 words, clamped to a sensible range so short
+     * notes still get a usable deck and long documents stay within the
+     * model's output limit.
+     */
+    private function flashcardCountFor(string $content): int
+    {
+        $words = str_word_count($content);
+        $count = (int) round($words / 110);
+
+        return max(8, min(40, $count));
     }
 
     public function failed(Throwable $e): void

@@ -65,24 +65,61 @@ PROMPT;
         return is_array($result) && isset($result[0]) ? $result : ($result['flashcards'] ?? []);
     }
 
-    public function generateQuiz(string $content, int $questionCount = 10, string $difficulty = 'Medium'): array
-    {
+    /**
+     * Generate a quiz of mixed question types.
+     *
+     * @param  string[]  $types  Any of: multiple_choice, true_false, identification, enumeration
+     */
+    public function generateQuiz(
+        string $content,
+        int $questionCount = 10,
+        string $difficulty = 'Intermediate',
+        array $types = ['multiple_choice'],
+    ): array {
+        $typeLabels = [
+            'multiple_choice' => 'Multiple Choice',
+            'true_false'      => 'True/False',
+            'identification'  => 'Identification (single short answer)',
+            'enumeration'     => 'Enumeration (list of several answers)',
+        ];
+
+        $requested = array_values(array_intersect(array_keys($typeLabels), $types));
+        if (empty($requested)) {
+            $requested = ['multiple_choice'];
+        }
+
+        $requestedList = collect($requested)->map(fn ($t) => "- {$t} ({$typeLabels[$t]})")->implode("\n");
+        $mixedNote = count($requested) > 1
+            ? "This is a MIXED quiz. Distribute the {$questionCount} questions across the requested types and GROUP them by type in contiguous blocks (all questions of one type together, then the next type). You decide a sensible split based on the question count and the content."
+            : "Use only the single requested type for every question.";
+
         $prompt = <<<PROMPT
-You are a quiz generator. Create exactly {$questionCount} multiple-choice questions from the text below.
+You are a quiz generator. Create EXACTLY {$questionCount} questions from the text below.
 Difficulty level: {$difficulty}.
 
-Return ONLY valid JSON (no markdown, no code fences) as an array:
-[
-  {
-    "body": "string — the question text",
-    "options": ["Option A", "Option B", "Option C", "Option D"],
-    "correct_option": "string — must exactly match one of the options",
-    "explanation": "string — why the correct option is right",
-    "difficulty": "{$difficulty}",
-    "type": "string — e.g. Conceptual, Applied, Recall",
-    "xp_reward": integer between 10 and 30
-  }
-]
+Allowed question types (use ONLY these):
+{$requestedList}
+
+{$mixedNote}
+
+Return ONLY valid JSON (no markdown, no code fences) as an array. Each object's shape depends on its "type":
+
+multiple_choice:
+{ "type": "multiple_choice", "body": "string", "options": ["A","B","C","D"], "correct_option": "string exactly matching one option", "explanation": "string", "difficulty": "{$difficulty}", "xp_reward": 10-30 }
+
+true_false:
+{ "type": "true_false", "body": "a statement to judge", "options": ["True","False"], "correct_option": "True" or "False", "explanation": "string", "difficulty": "{$difficulty}", "xp_reward": 10-30 }
+
+identification:
+{ "type": "identification", "body": "question asking for one specific term/answer", "correct_option": "the single correct answer", "explanation": "string", "difficulty": "{$difficulty}", "xp_reward": 10-30 }
+
+enumeration:
+{ "type": "enumeration", "body": "instruction to list specific items (state how many)", "correct_answers": ["item1","item2","item3"], "explanation": "string", "difficulty": "{$difficulty}", "xp_reward": 10-30 }
+
+Rules:
+- The total number of questions across all types MUST equal exactly {$questionCount}.
+- For enumeration, keep correct_answers short and unambiguous (single words or short phrases).
+- Base every question strictly on the text.
 
 TEXT:
 {$content}

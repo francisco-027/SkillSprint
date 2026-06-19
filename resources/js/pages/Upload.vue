@@ -342,7 +342,7 @@ export default {
     const urlInput = ref('');
     const difficulty = ref('beginner');
     const outputLanguage = ref('English');
-    const outputTypes = reactive({ summary: true, flashcards: true, quiz: true, mindmap: false });
+    const outputTypes = reactive({ summary: true, flashcards: true, mindmap: false });
     const generating = ref(false);
     const statusText = ref('');
     const error = ref(null);
@@ -386,7 +386,6 @@ export default {
     const outputTypeList = [
       { key: 'summary',    title: 'AI Summary', sub: 'Timeline view', icon: 'ic-file' },
       { key: 'flashcards', title: 'Flashcards', sub: 'Key terms',     icon: 'ic-layers' },
-      { key: 'quiz',       title: 'Quiz',       sub: 'MCQ & short',    icon: 'ic-list-checks' },
       { key: 'mindmap',    title: 'Mind Map',   sub: 'Visual web',     icon: 'ic-network', disabled: true },
     ];
 

@@ -42,7 +42,7 @@ services:
       - key: CACHE_STORE
         value: database
       - key: QUEUE_CONNECTION
-        value: database
+        value: sync
 
       - key: GEMINI_API_KEY
         sync: false
@@ -53,11 +53,3 @@ services:
         value: stderr
       - key: LOG_LEVEL
         value: error
-
-  - type: worker
-    name: skillsprint-queue
-    env: php
-    buildCommand: composer install --no-dev
-    startCommand: php artisan queue:work --tries=2 --timeout=120 --sleep=3
-    envVars:
-      - fromGroup: skillsprint-env

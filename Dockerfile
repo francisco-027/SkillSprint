@@ -26,17 +26,25 @@ RUN apk add --no-cache \
     oniguruma-dev \
     libzip-dev \
     libzip \
+    libpng \
+    libpng-dev \
+    libjpeg-turbo \
+    libjpeg-turbo-dev \
+    freetype \
+    freetype-dev \
     zip \
     unzip \
     curl \
+ && docker-php-ext-configure gd --with-freetype --with-jpeg \
  && docker-php-ext-install \
     pdo \
     pdo_pgsql \
     pgsql \
     mbstring \
     zip \
+    gd \
     opcache \
- && apk del postgresql-dev oniguruma-dev libzip-dev
+ && apk del postgresql-dev oniguruma-dev libzip-dev libpng-dev libjpeg-turbo-dev freetype-dev
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

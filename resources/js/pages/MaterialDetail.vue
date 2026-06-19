@@ -1,5 +1,5 @@
 <template>
-  <app-layout active-page="upload" :page-title="summary?.title || 'Material'">
+  <div class="route-view">
     <!-- Loading -->
     <div v-if="loading" class="text-center py-5">
       <div class="skel" style="width:50%;max-width:300px;margin:0 auto 16px;height:20px"></div>
@@ -10,14 +10,6 @@
 
     <!-- ============ MATERIAL VIEW ============ -->
     <template v-if="!loading && !error && mode === 'material'">
-      <!-- Top bar: back -->
-      <div class="material-topbar">
-        <a href="/upload" class="back-link" style="margin-bottom:0">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-          Back to My Materials
-        </a>
-      </div>
-
       <div class="page-header">
         <p><span style="color:var(--purple-bright);font-weight:600">{{ summary?.difficulty }}</span>
            · {{ summary?.estimated_minutes }} min · {{ summary?.source_filename }}</p>
@@ -261,16 +253,19 @@
         </div>
       </div>
     </div>
-  </app-layout>
+  </div>
 </template>
 
 <script>
 import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 export default {
   name: 'MaterialDetailPage',
   setup() {
-    const summaryId = window.location.pathname.split('/').pop();
+    const route = useRoute();
+    const router = useRouter();
+    const summaryId = route.params.id;
 
     const summary = ref(null);
     const deck = ref(null);
@@ -377,7 +372,7 @@ export default {
     }
 
     function viewResults(quizId) {
-      window.location.href = `/quizzes/${quizId}/results`;
+      router.push(`/quizzes/${quizId}/results`);
     }
 
     // ---- Generate modal ----
@@ -483,7 +478,7 @@ export default {
       clearInterval(timerInterval);
       try {
         const { data } = await axios.post(`/api/quizzes/${activeQuizId.value}/submit`, { answers: answers.value });
-        window.location.href = data.redirect;
+        router.push(data.redirect);
       } catch (e) {
         error.value = 'Submission failed. Please try again.';
         submitting.value = false;

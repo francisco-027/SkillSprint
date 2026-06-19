@@ -1,5 +1,5 @@
 <template>
-  <app-layout active-page="upload" page-title="My Materials">
+  <div class="route-view">
     <!-- Header -->
     <div class="page-head-row">
       <div class="page-header" style="margin-bottom:0">
@@ -324,15 +324,17 @@
         </div>
       </div>
     </div>
-  </app-layout>
+  </div>
 </template>
 
 <script>
 import { ref, computed, onMounted, onBeforeUnmount, reactive } from 'vue';
+import { useRouter } from 'vue-router';
 
 export default {
   name: 'UploadPage',
   setup() {
+    const router = useRouter();
     const activeTab = ref('paste');
     const materialTitle = ref('');
     const pastedText = ref('');
@@ -441,7 +443,7 @@ export default {
     }
 
     function openMaterial(m) {
-      if (m.summary_id) window.location.href = `/materials/${m.summary_id}`;
+      if (m.summary_id) router.push(`/materials/${m.summary_id}`);
     }
 
     function closeModal() {
@@ -608,7 +610,11 @@ export default {
         statusText.value = 'Generating with AI...';
 
         await waitForDone(data.upload_id);
-        window.location.href = '/upload'; // back to My Materials
+        // Refresh the list in place (SPA — no full reload needed).
+        showModal.value = false;
+        generating.value = false;
+        statusText.value = '';
+        await loadMaterials();
       } catch (e) {
         error.value =
           e.response?.data?.message ||

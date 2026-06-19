@@ -1,5 +1,5 @@
 <template>
-  <app-layout active-page="settings" page-title="Settings">
+  <div class="route-view">
     <!-- Header -->
     <div class="page-head-row">
       <div>
@@ -252,7 +252,7 @@
         </div>
       </div>
     </template>
-  </app-layout>
+  </div>
 </template>
 
 <script>

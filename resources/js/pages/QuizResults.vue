@@ -1,5 +1,5 @@
 <template>
-  <app-layout active-page="quizzes" page-title="Quiz Results">
+  <div class="route-view">
     <div v-if="loading" class="text-center py-5">
       <div class="skel" style="width:50%;margin:0 auto 12px;height:28px"></div>
       <div class="skel" style="width:80%;max-width:400px;margin:0 auto 20px;height:16px"></div>
@@ -92,20 +92,23 @@
         <button class="btn-ghost" @click="backToDashboard">Back to Dashboard</button>
       </div>
     </template>
-  </app-layout>
+  </div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 export default {
   name: 'QuizResultsPage',
   setup() {
+    const route = useRoute();
+    const router = useRouter();
     const results = ref(null);
     const loading = ref(true);
     const error = ref(null);
     const activeReviewTab = ref('all');
-    const quizId = ref(window.location.pathname.split('/').filter(Boolean).slice(-2, -1)[0] || 1);
+    const quizId = ref(route.params.quizId);
 
     const reviewedQuestions = computed(() => {
       if (!results.value) return [];
@@ -126,13 +129,13 @@ export default {
     });
 
     function studyMaterial() {
-      if (results.value?.summary_id) window.location.href = `/materials/${results.value.summary_id}`;
+      if (results.value?.summary_id) router.push(`/materials/${results.value.summary_id}`);
     }
     function backToDashboard() {
-      window.location.href = '/home';
+      router.push('/home');
     }
     function retryQuiz() {
-      window.location.href = `/quizzes/${quizId.value}`;
+      router.push(`/quizzes/${quizId.value}`);
     }
 
     return {

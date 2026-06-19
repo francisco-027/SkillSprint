@@ -251,6 +251,7 @@ body.high-contrast.contrast-yellow {
 /* ===== App Main ===== */
 .app-main {
     flex: 1;
+    min-width: 0; /* allow the flex child to shrink so wide content can't push the page sideways */
     margin-left: 210px;
     display: flex;
     flex-direction: column;
@@ -269,17 +270,58 @@ body.high-contrast.contrast-yellow {
     z-index: 40;
 }
 
-.topbar-left .breadcrumb {
+/* Mobile brand — hidden on desktop, shown on phones (sidebar is hidden there) */
+.topbar-brand {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.topbar-brand-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--grad);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 800;
+    box-shadow: 0 4px 14px rgba(124, 92, 252, 0.4);
+}
+
+.topbar-brand-name {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text);
+}
+
+.topbar-brand-name span {
+    color: var(--purple-bright);
+}
+
+/* Desktop back button — replaces the old breadcrumb */
+.topbar-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
     font-size: 14px;
+    font-weight: 600;
     color: var(--text-muted);
+    text-decoration: none;
+    transition: color .15s;
 }
 
-.topbar-left .breadcrumb a {
-    color: var(--text-muted);
+.topbar-back:hover {
+    color: var(--text);
 }
 
-.topbar-left .breadcrumb .sep {
-    margin: 0 8px;
+.topbar-back svg {
+    width: 16px;
+    height: 16px;
 }
 
 .topbar-right {
@@ -391,6 +433,7 @@ body.high-contrast.contrast-yellow {
 .page-content {
     flex: 1;
     padding: 28px 30px 40px;
+    overflow-x: clip; /* contain the page slide transition (no transient scrollbar) */
 }
 
 /* ===== Page Header ===== */
@@ -1846,7 +1889,9 @@ body.high-contrast.contrast-yellow {
 /* ===== Flashcard Deck (redesigned) ===== */
 .fc-layout {
     display: grid;
-    grid-template-columns: 1fr 320px;
+    /* minmax(0, ...) lets the track shrink below its content so a long
+       question can't blow the grid wider than the viewport. */
+    grid-template-columns: minmax(0, 1fr) 320px;
     gap: 20px;
     align-items: start;
 }
@@ -3279,4 +3324,186 @@ body:not(.reduce-motion) .font-chip:hover::after,
 body:not(.reduce-motion) .size-preset:hover::before,
 body:not(.reduce-motion) .size-preset:hover::after {
     opacity: 1;
+}
+
+/* ============================================================
+   SPA page route transitions — subtle slide + fade
+   ============================================================ */
+.page-slide-enter-active,
+.page-slide-leave-active {
+    transition: opacity .22s ease, transform .22s ease;
+}
+.page-slide-enter-from { opacity: 0; transform: translateX(16px); }
+.page-slide-leave-to   { opacity: 0; transform: translateX(-16px); }
+
+body.reduce-motion .page-slide-enter-active,
+body.reduce-motion .page-slide-leave-active {
+    transition: none;
+}
+
+/* ============================================================
+   Mobile bottom tab bar + phone layout (<= 640px)
+   ============================================================ */
+.app-bottom-nav { display: none; }
+
+@media (max-width: 640px) {
+    /* Replace the side rail with a fixed bottom tab bar */
+    .app-sidebar { display: none; }
+    .app-main { margin-left: 0; }
+
+    .app-bottom-nav {
+        display: flex;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 60;
+        background: var(--surface);
+        border-top: 1px solid var(--card-border);
+        padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+        justify-content: space-around;
+    }
+
+    .bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 4px 2px;
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: color .15s;
+    }
+
+    .bottom-nav-item.active { color: var(--purple-bright); }
+    .bottom-nav-ic { display: flex; }
+    .bottom-nav-ic svg { width: 22px; height: 22px; }
+    .bottom-nav-label { line-height: 1; }
+
+    /* Leave room above the bar; drop the footer to save space */
+    .page-content { padding: 18px 16px 92px; overflow-x: hidden; }
+    .app-footer { display: none; }
+
+    /* Material rows: keep within the viewport, let the meta line wrap */
+    .material-row { gap: 10px; }
+    .material-sub { overflow-wrap: anywhere; }
+    .material-tabs { overflow-x: auto; scrollbar-width: none; }
+    .material-tabs::-webkit-scrollbar { display: none; }
+
+    /* Tighter top bar; swap desktop back button for the brand */
+    .app-topbar { padding: 12px 16px; gap: 10px; }
+    .topbar-brand { display: inline-flex; }
+    .topbar-back { display: none; }
+    .topbar-right { gap: 8px; }
+    .xp-pill,
+    .streak-pill { font-size: 11px; padding: 4px 8px; }
+
+    /* Scale headings + cards for narrow screens */
+    .page-header { margin-bottom: 18px; }
+    .page-header h1 { font-size: 22px; }
+    .content-card { padding: 16px; }
+
+    /* --- Smaller buttons on phones --- */
+    .btn-grad,
+    .btn-ghost {
+        padding: 9px 16px;
+        font-size: 14px;
+        gap: 7px;
+    }
+    .btn-grad.lg,
+    .btn-ghost.lg {
+        padding: 12px 20px;
+        font-size: 15px;
+    }
+    .btn-grad svg,
+    .btn-ghost svg { width: 16px; height: 16px; }
+
+    /* --- Collapse multi-column grids --- */
+    .output-type-grid { grid-template-columns: 1fr 1fr; }   /* output picker: 2 per row */
+    .upload-tabs { grid-template-columns: repeat(2, 1fr); } /* input-source tabs: 2x2 */
+    .fc-layout { grid-template-columns: minmax(0, 1fr); }   /* flashcard layout stacks */
+    .time-totals { gap: 8px; }
+
+    /* --- Dashboard stat cards: swipeable horizontal carousel --- */
+    .stat-row {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 12px;
+        margin-left: 0;
+        margin-right: 0;
+        padding-bottom: 4px;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .stat-row::-webkit-scrollbar { display: none; }
+    .stat-row > [class*="col-"] {
+        flex: 0 0 auto;
+        width: 78%;
+        max-width: 250px;
+        padding-left: 0;
+        padding-right: 0;
+        scroll-snap-align: start;
+    }
+    .stat-card { padding: 16px; }
+    .stat-card .stat-value { font-size: 26px; }
+
+    /* --- Typography + spacing tighten --- */
+    .page-header p { font-size: 13px; }
+    .page-header { margin-bottom: 16px; }
+    .content-card { padding: 14px; margin-bottom: 14px; }
+    .content-card h3 { font-size: 16px; }
+    .modal-title { font-size: 20px; }
+    .input-sub { font-size: 12px; }
+
+    /* --- Tabs / chips smaller --- */
+    .upload-tab { padding: 10px 8px; font-size: 12px; }
+    .upload-tab-btn,
+    .material-tab { padding: 8px 12px; font-size: 13px; }
+    .difficulty-pill { padding: 7px 12px; font-size: 13px; }
+    .sample-chip { padding: 6px 11px; font-size: 12px; }
+
+    /* --- Modals fill the screen comfortably --- */
+    .modal-overlay { padding: 16px 12px; }
+    .modal-card { padding: 20px; border-radius: 14px; }
+
+    /* --- Larger tap targets for quiz options --- */
+    .quiz-option { padding: 12px 14px; }
+
+    /* --- Flashcard deck --- */
+    .flip-card,
+    .fc-card { height: 250px; }
+    .flip-card-front,
+    .flip-card-back { padding: 18px; }
+    .flip-card-text { font-size: 15px; line-height: 1.45; }
+    .fc-icon { width: 44px; height: 44px; font-size: 22px; }
+    .fc-cat,
+    .fc-flip-hint { top: 12px; }
+    .fc-cat { left: 12px; }
+    .fc-flip-hint { right: 12px; }
+
+    /* Action + nav buttons split the row evenly so they never overflow */
+    .fc-actions,
+    .fc-nav { gap: 8px; }
+    .fc-actions .btn-ghost,
+    .fc-actions .btn-grad,
+    .fc-nav .btn-ghost,
+    .fc-nav .btn-grad {
+        flex: 1 1 0;
+        min-width: 0;
+        justify-content: center;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .fc-dots { flex-wrap: wrap; }
+    .fc-legend { gap: 8px 14px; font-size: 11px; flex-wrap: wrap; }
+    .fc-sidebar { margin-top: 6px; }
+    .fc-list { max-height: 230px; }   /* ~4 cards, then scrolls */
+    .fc-list-item { padding: 8px 10px; }
+    .fc-list-title { font-size: 12.5px; }
 }

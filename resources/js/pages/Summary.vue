@@ -1,5 +1,5 @@
 <template>
-  <app-layout active-page="" page-title="AI Summary">
+  <div class="route-view">
     <div v-if="loading" class="text-center py-5">
       <div class="skel" style="width:60%;max-width:400px;margin:0 auto 12px;height:24px"></div>
       <div class="skel" style="width:80%;max-width:500px;margin:0 auto 20px;height:16px"></div>
@@ -95,34 +95,38 @@
 
       <!-- Actions -->
       <div style="display:flex;gap:12px;margin-top:24px;justify-content:center;flex-wrap:wrap">
-        <button class="btn-grad" @click="window.location='/flashcards/' + $route.params.id">
+        <button class="btn-grad" @click="goFlashcards">
           Study Flashcards
         </button>
-        <button class="btn-ghost" @click="window.location='/quizzes/1'">
+        <button class="btn-ghost" @click="goQuiz">
           Take Quiz
         </button>
       </div>
     </template>
-  </app-layout>
+  </div>
 </template>
 
 <script>
 import { ref, reactive, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 export default {
   name: 'SummaryPage',
   setup() {
+    const route = useRoute();
+    const router = useRouter();
+    const summaryId = route.params.id;
     const summary = ref(null);
     const loading = ref(true);
     const error = ref(null);
     const activeTab = ref('summary');
     const a11yOptions = reactive({ tts: true, simplify: true, dyslexia: false, high_contrast: false });
 
+    function goFlashcards() { router.push(`/flashcards/${summaryId}`); }
+    function goQuiz() { router.push(`/materials/${summaryId}`); }
+
     onMounted(async () => {
       try {
-        const id = new URLSearchParams(window.location.search).get('id') || 1;
-        const pathId = window.location.pathname.split('/').pop();
-        const summaryId = !isNaN(pathId) ? pathId : id;
         const { data } = await axios.get(`/api/summaries/${summaryId}`);
         summary.value = data;
       } catch (e) {
@@ -132,7 +136,7 @@ export default {
       }
     });
 
-    return { summary, loading, error, activeTab, a11yOptions };
+    return { summary, loading, error, activeTab, a11yOptions, goFlashcards, goQuiz };
   },
 };
 </script>

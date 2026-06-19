@@ -1,5 +1,5 @@
 <template>
-  <app-layout active-page="dashboard" page-title="Dashboard">
+  <div class="route-view">
     <!-- Header -->
     <div class="page-header">
       <span class="badge-pill"><ic-hand :size="14" /> Welcome back!</span>
@@ -8,7 +8,7 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading && !dashboard" class="row g-3 mt-1">
+    <div v-if="loading && !dashboard" class="row g-3 mt-1 stat-row">
       <div class="col-md-3" v-for="n in 4" :key="n">
         <div class="stat-card"><div class="skel" style="width:80%;margin:0 auto 8px;height:24px"></div><div class="skel" style="width:50%;margin:0 auto;height:14px"></div></div>
       </div>
@@ -18,7 +18,7 @@
 
     <template v-if="dashboard">
       <!-- Stat Cards -->
-      <div class="row g-3 mt-1">
+      <div class="row g-3 mt-1 stat-row">
         <div class="col-md-3">
           <div class="stat-card">
             <div class="stat-top"><span class="stat-ic" style="background:rgba(124,92,252,0.15)"><ic-star :size="18" color="#9d7bff" /></span><span class="stat-delta positive">+{{ dashboard.stats.xp_delta }} today</span></div>
@@ -182,15 +182,17 @@
         </div>
       </div>
     </template>
-  </app-layout>
+  </div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 export default {
   name: 'DashboardPage',
   setup() {
+    const router = useRouter();
     const dashboard = ref(null);
     const user = ref(null);
     const loading = ref(true);
@@ -237,7 +239,7 @@ export default {
       return 'ic-star';
     }
 
-    function go(url) { window.location.href = url; }
+    function go(url) { router.push(url); }
     function continueLearning() {
       const s = dashboard.value?.continue_learning;
       go(s ? `/materials/${s.summary_id}` : '/upload');

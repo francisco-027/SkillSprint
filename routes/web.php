@@ -8,22 +8,24 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-
-// Public — no login required
+// Public — no login required (standalone, not part of the SPA)
 Route::view('/quick-start', 'quickstart');
 
-// Authenticated app pages — redirect guests to login before the page calls the API
+// Authenticated app pages. Every SPA URL serves the same shell; Vue Router
+// renders the correct page client-side. Deep links / refresh still work because
+// the server matches each path here and returns the shell.
 Route::middleware('auth')->group(function () {
-    Route::view('/onboarding', 'onboarding');
-    Route::view('/skills', 'skills');
-    Route::view('/upload', 'upload');
-    Route::view('/materials/{id}', 'material');
-    Route::view('/summaries/{id}', 'summary');
-    Route::view('/flashcards/{deckId}', 'flashcards');
-    Route::view('/quizzes/{quizId}', 'quiz');
-    Route::view('/quizzes/{quizId}/results', 'quiz-results');
-    Route::view('/analytics', 'analytics');
-    Route::view('/achievements', 'achievements');
-    Route::view('/settings', 'settings');
+    Route::view('/onboarding', 'onboarding'); // standalone full-screen flow
+
+    Route::view('/home', 'spa')->name('home');
+    Route::view('/skills', 'spa');
+    Route::view('/upload', 'spa');
+    Route::view('/materials/{id}', 'spa');
+    Route::view('/summaries/{id}', 'spa');
+    Route::view('/flashcards/{deckId}', 'spa');
+    Route::view('/quizzes/{quizId}', 'spa');
+    Route::view('/quizzes/{quizId}/results', 'spa');
+    Route::view('/analytics', 'spa');
+    Route::view('/achievements', 'spa');
+    Route::view('/settings', 'spa');
 });

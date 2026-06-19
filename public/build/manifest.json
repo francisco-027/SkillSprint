@@ -18,7 +18,7 @@
     "isEntry": true
   },
   "resources/css/pages.css": {
-    "file": "assets/pages-DibF5RDo.css",
+    "file": "assets/pages-E9qfXZbX.css",
     "name": "pages",
     "names": [
       "pages.css"
@@ -27,12 +27,12 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-DfzIjfuy.js",
+    "file": "assets/app-CiX1gL8M.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "css": [
-      "assets/app-CMUwmEkt.css"
+      "assets/app-BTzAiIwx.css"
     ]
   },
   "resources/sass/app.scss": {

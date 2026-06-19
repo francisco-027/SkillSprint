@@ -1,5 +1,5 @@
 <template>
-  <div class="skills-page container-fluid" style="min-height:100vh;background:var(--bg);padding:30px 26px">
+  <div class="skills-page route-view">
     <div class="row g-4">
       <!-- Left Panel -->
       <div class="col-lg-3">
@@ -30,10 +30,10 @@
 
       <!-- Main Content -->
       <div class="col-lg-9">
-        <a href="/home" class="back-link">
+        <router-link to="/home" class="back-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           Back to Dashboard
-        </a>
+        </router-link>
         <span class="badge-pill"><ic-zap :size="14" /> Explore Skills</span>
         <h1 class="skills-hero">What Do You Want to <span class="grad-text">Learn?</span></h1>
         <p style="color:var(--text-muted);max-width:560px;margin-bottom:22px">
@@ -135,10 +135,12 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 export default {
   name: 'SkillsPage',
   setup() {
+    const router = useRouter();
     const materials = ref([]);
     const loading = ref(true);
     const error = ref(null);
@@ -196,7 +198,7 @@ export default {
     });
 
     function openMaterial(m) {
-      if (m.summary_id) window.location.href = `/materials/${m.summary_id}`;
+      if (m.summary_id) router.push(`/materials/${m.summary_id}`);
     }
 
     async function toggleSave(m) {

@@ -1,5 +1,5 @@
 <template>
-  <app-layout active-page="flashcards" page-title="Flashcards">
+  <div class="route-view">
     <div class="page-header">
       <h1>{{ loading ? 'Loading...' : (deck?.title || 'Flashcards') }}</h1>
       <p>{{ masteredCount }} mastered · {{ savedCount }} saved · {{ remainingCount }} remaining</p>
@@ -24,16 +24,17 @@
       <h4>No flashcards yet</h4>
       <p>Generate flashcards from your study material first.</p>
     </div>
-  </app-layout>
+  </div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 
 export default {
   name: 'FlashcardsPage',
   setup() {
-    const deckId = window.location.pathname.split('/').pop() || 1;
+    const deckId = useRoute().params.deckId;
     const deck = ref(null);
     const cards = ref([]);
     const loading = ref(true);

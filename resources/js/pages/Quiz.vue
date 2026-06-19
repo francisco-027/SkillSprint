@@ -1,5 +1,5 @@
 <template>
-  <app-layout active-page="quizzes" page-title="Quiz">
+  <div class="route-view">
     <div v-if="loading" class="text-center py-5">
       <div class="skel" style="width:40%;margin:0 auto 12px;height:24px"></div>
       <div class="skel" style="width:100%;max-width:500px;height:140px;margin:0 auto"></div>
@@ -86,15 +86,18 @@
         </div>
       </div>
     </template>
-  </app-layout>
+  </div>
 </template>
 
 <script>
 import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 export default {
   name: 'QuizPage',
   setup() {
+    const router = useRouter();
+    const quizId = useRoute().params.quizId;
     const quiz = ref(null);
     const questions = ref([]);
     const loading = ref(true);
@@ -144,8 +147,6 @@ export default {
 
     onMounted(async () => {
       try {
-        const pathParts = window.location.pathname.split('/');
-        const quizId = pathParts[pathParts.length - 1] || 1;
         const { data } = await axios.get(`/api/quizzes/${quizId}`);
         quiz.value = data.quiz;
         questions.value = data.questions;
@@ -196,10 +197,8 @@ export default {
       }
       loading.value = true;
       try {
-        const pathParts = window.location.pathname.split('/');
-        const quizId = pathParts[pathParts.length - 1] || 1;
         const { data } = await axios.post(`/api/quizzes/${quizId}/submit`, { answers: answers.value });
-        window.location.href = data.redirect;
+        router.push(data.redirect);
       } catch (e) {
         error.value = 'Submission failed. Please try again.';
         loading.value = false;

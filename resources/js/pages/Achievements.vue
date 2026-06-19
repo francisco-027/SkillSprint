@@ -1,5 +1,5 @@
 <template>
-  <app-layout active-page="achievements" page-title="Achievements">
+  <div class="route-view">
     <!-- Header -->
     <div class="page-header">
       <span class="badge-pill"><ic-trophy :size="14" /> Achievements & Profile</span>
@@ -156,15 +156,17 @@
         </div>
       </div>
     </template>
-  </app-layout>
+  </div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 export default {
   name: 'AchievementsPage',
   setup() {
+    const router = useRouter();
     const data = ref(null);
     const loading = ref(true);
     const error = ref(null);
@@ -240,7 +242,7 @@ export default {
     };
     function badgeIcon(slug) { return BADGE_ICONS[slug] || 'ic-award'; }
 
-    function go(url) { window.location.href = url; }
+    function go(url) { router.push(url); }
     function shareProfile() {
       navigator.clipboard?.writeText(window.location.href).catch(() => {});
       shared.value = true;

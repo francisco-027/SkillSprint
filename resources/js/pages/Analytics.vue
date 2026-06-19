@@ -1,5 +1,5 @@
 <template>
-  <app-layout active-page="analytics" page-title="Analytics">
+  <div class="route-view">
     <!-- Header -->
     <div class="page-head-row">
       <div>
@@ -207,7 +207,7 @@
         </div>
       </div>
     </template>
-  </app-layout>
+  </div>
 </template>
 
 <script>

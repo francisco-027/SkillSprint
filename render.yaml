@@ -26,8 +26,9 @@ services:
         value: 5432
       - key: DB_DATABASE
         value: postgres
+      # Supabase pooler requires the tenant in the username: postgres.<project-ref>
       - key: DB_USERNAME
-        value: postgres
+        sync: false
       - key: DB_PASSWORD
         sync: false
       - key: DB_SSLMODE

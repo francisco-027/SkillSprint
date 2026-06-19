@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+
+# Laravel local files
+vendor
+.env
+.env.backup
+.env.production
+storage/logs/*.log
+storage/framework/sessions/*
+storage/framework/views/*
+storage/framework/cache/*
+bootstrap/cache/*.php
+
+# Build artifacts (rebuilt inside Docker)
+public/hot
+public/build
+
+# Dev/test files
+phpunit.xml
+tests
+README.md
+IMPLEMENTATION_PLAN.md
+IMPLEMENTATION_REPORT.md
+PROJECT_ROADMAP.md
+
+# IDE
+.idea
+.vscode

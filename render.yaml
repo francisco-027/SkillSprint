@@ -1,0 +1,63 @@
+services:
+  - type: web
+    name: microlearn-ai
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    buildCommand: composer install --no-dev --optimize-autoloader && npm run build && php artisan migrate --force && php artisan config:cache && php artisan route:cache
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    envVars:
+      - key: APP_NAME
+        value: https://microlearn-ai-3hy3.onrender.com
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        value: https://microlearn-ai-3hy3.onrender.com
+      - key: ASSET_URL
+        value: https://microlearn-ai-3hy3.onrender.com
+
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        value: postgres
+      - key: DB_USERNAME
+        value: postgres
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSLMODE
+        value: require
+
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_SECURE_COOKIE
+        value: true
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: error
+
+  - type: worker
+    name: skillsprint-queue
+    env: php
+    buildCommand: composer install --no-dev
+    startCommand: php artisan queue:work --tries=2 --timeout=120 --sleep=3
+    envVars:
+      - fromGroup: skillsprint-env

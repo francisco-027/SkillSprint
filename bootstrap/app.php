@@ -13,6 +13,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Render (and most PaaS) terminate TLS at a proxy and forward as HTTP.
+        // Trust the forwarded headers so Laravel generates https:// URLs.
+        $middleware->trustProxies(
+            at: '*',
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO,
+        );
+
         $middleware->statefulApi();
         $middleware->appendToGroup('auth:sanctum', \App\Http\Middleware\UpdateStreak::class);
     })

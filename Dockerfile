@@ -75,5 +75,9 @@ RUN composer run-script post-autoload-dump
 
 EXPOSE 8000
 
-# Use shell form so $PORT is expanded at runtime
-CMD php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+# Use shell form so $PORT is expanded at runtime.
+# A background queue worker processes AI generation jobs so they don't block
+# (and time out) the HTTP request; the web server runs in the foreground.
+CMD php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force \
+ && (php artisan queue:work --tries=2 --timeout=180 --sleep=2 --rest=1 > /dev/null 2>&1 &) \
+ && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}

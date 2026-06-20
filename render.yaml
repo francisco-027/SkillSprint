@@ -40,7 +40,7 @@ services:
       - key: CACHE_STORE
         value: database
       - key: QUEUE_CONNECTION
-        value: sync
+        value: database
 
       - key: GEMINI_API_KEY
         sync: false

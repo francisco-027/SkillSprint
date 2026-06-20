@@ -1692,6 +1692,11 @@ body.high-contrast.contrast-yellow {
     color: var(--text);
 }
 
+/* Lift the row whose options menu is open above the rows below it. */
+.material-row:has(.material-menu) {
+    position: relative;
+    z-index: 60;
+}
 .material-menu {
     position: absolute;
     top: calc(100% + 4px);
@@ -1702,7 +1707,7 @@ body.high-contrast.contrast-yellow {
     border-radius: 10px;
     padding: 5px;
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
-    z-index: 30;
+    z-index: 61;
 }
 
 .material-menu-item {

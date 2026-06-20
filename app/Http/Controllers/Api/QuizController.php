@@ -41,6 +41,11 @@ class QuizController extends Controller
             return response()->json(['message' => 'No source content is available to build a quiz from.'], 422);
         }
 
+        // Cap text sent to the AI so the call stays fast and within token limits.
+        if (mb_strlen($content) > 24000) {
+            $content = mb_substr($content, 0, 24000);
+        }
+
         try {
             $questions = $gemini->generateQuiz(
                 $content,
@@ -66,24 +71,34 @@ class QuizController extends Controller
             'difficulty'     => $data['difficulty'],
         ]);
 
+        // Bulk insert in one query (individual inserts are far too slow on a
+        // remote database). JSON columns are encoded manually since insert()
+        // bypasses Eloquent casts.
+        $now  = now();
+        $rows = [];
         foreach (array_values($questions) as $i => $q) {
             $type = in_array($q['type'] ?? '', ['multiple_choice', 'true_false', 'identification', 'enumeration'], true)
                 ? $q['type']
                 : 'multiple_choice';
 
-            QuizQuestion::create([
+            $options = $type === 'true_false' ? ($q['options'] ?? ['True', 'False']) : ($q['options'] ?? null);
+
+            $rows[] = [
                 'quiz_id'         => $quiz->id,
                 'body'            => $q['body'] ?? 'Question unavailable',
-                'options'         => $type === 'true_false' ? ($q['options'] ?? ['True', 'False']) : ($q['options'] ?? null),
+                'options'         => $options !== null ? json_encode($options) : null,
                 'correct_option'  => $type === 'enumeration' ? null : ($q['correct_option'] ?? ''),
-                'correct_answers' => $type === 'enumeration' ? array_values((array) ($q['correct_answers'] ?? [])) : null,
+                'correct_answers' => $type === 'enumeration' ? json_encode(array_values((array) ($q['correct_answers'] ?? []))) : null,
                 'explanation'     => $q['explanation'] ?? '',
                 'difficulty'      => $q['difficulty'] ?? $data['difficulty'],
                 'type'            => $type,
                 'xp_reward'       => (int) ($q['xp_reward'] ?? 15),
                 'sort_order'      => $i + 1,
-            ]);
+                'created_at'      => $now,
+                'updated_at'      => $now,
+            ];
         }
+        QuizQuestion::insert($rows);
 
         return response()->json(['quiz_id' => $quiz->id], 201);
     }
